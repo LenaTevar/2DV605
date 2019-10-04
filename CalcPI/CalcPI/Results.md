@@ -12,6 +12,7 @@ Results using different machines and functions (lineal and parallel)
 
 
 | Type | Threads| 24kk | 48kk | 96kk |
+|------|------|---|------|------|
 |Sec IDA| 1|0.120724 	| 0.151110 	| 0.299976 	|
 | omp red2 IDA|6| 0.028640| 0.044224| 0.066043|
 |omp IDA|12|0.016454| 0.025487 |0.041736|
