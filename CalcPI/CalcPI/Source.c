@@ -1,17 +1,11 @@
 #include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #define PI 3.14159265358979323846264
 
-int main(int argc, char* argv[])
-{
-	int iterations = 1000000000;
-	calcPI(iterations);
 
-}
 
-int calcPI(iterations) {
+void calcPI(int iterations) {
 	double m, ni, mypi = 0.0;
 	double difTime;
 	int i;
@@ -29,18 +23,19 @@ int calcPI(iterations) {
 	mypi *= m;
 	double end = omp_get_wtime();
 	difTime = end - start;
-	printf("the time of dif is %f\n", difTime);
-	printf("MyPI = %.100f\n", mypi);
-	printf("MyPI - PI = %.100f\n", (mypi - PI));
-	return 0;
+
+	printf("Iterations %d \tExecution time %f\n", iterations, difTime);
+	printf("\tMyPI = %.70f\n", mypi);
+	printf("\tMyPI - PI = %.70f\n\n", (mypi - PI));
+	
 }
 
+int main(int argc, char* argv[])
+{
+	int iterations = 1000000000;
+	int iteArr[3] = { 24000000, 48000000, 96000000 };
 
-/*
-CALCULATING TIME 
-	clock_t begin = clock();
-	calcPI(iterations); //TIME CONSUMING JOB
-	clock_t end = clock();
-	double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-	printf("time spent %d", time_spent);
-*/
+	for (int i = 0; i < 3; i++) {
+		calcPI(iteArr[i]);
+	}
+}
