@@ -35,8 +35,8 @@ int main(int argc, char* argv[])
 {
 	int iterations = 1000000000;
 	int iteArr[3] = { 24000000, 48000000, 96000000 };
-
+	int threads = 48;
 	for (int i = 0; i < 3; i++) {
-		calcPI(iteArr[i], 6);
+		calcPI(iteArr[i], threads);
 	}
 }
