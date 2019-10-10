@@ -37,8 +37,8 @@ void calcPI(int iterations, int threads) {
 int main(int argc, char* argv[])
 {
 	int iteLength = 3;
-	int iteArr[3] = { 24000000, 48000000, 96000000 };
-
+	//int iteArr[3] = { 24000000, 48000000, 96000000 };
+	int iteArr[3] = { 24000000, 48000000, 1000000000};
 	int thLength = 5;
 	int threads[5] = {1,6,12,24,48};
 
