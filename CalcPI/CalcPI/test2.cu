@@ -6,8 +6,9 @@ Tested blocks/threads:
 256/1024
 128/1024
 512/1024
+768/1024
 */
-#define NUM_BLOCK  512  
+#define NUM_BLOCK  768  
 #define NUM_THREAD  1024  
 #define PI  3.14159265358979323846  
 
@@ -27,7 +28,7 @@ __global__ void cal_pi(double *mypi, int iter,
 
 int main(void) {
     double pi = 0;
-	clock_t start,end;
+
     int iteArr[3] = { 24000000, 48000000, 94000000 };
     //double iteArr[3] = { 24000000000, 48000000000, 94000000000 };
     //int iteArr[3] = { 1, 2, 4 };
@@ -42,7 +43,6 @@ int main(void) {
     for (int i = 0; i < 3; i++){
         int currentIter = iteArr[i];
 
-        start = clock(); // because why not...
         double step = 1.0 / currentIter;  
         size_t size = NUM_BLOCK*NUM_THREAD*sizeof(double);  
         
@@ -66,13 +66,9 @@ int main(void) {
         pi *= step;
         printf("\tMyPI = %20.18f \n",pi);
         printf("\tMyPI - PI = %20.18f \n",pi-PI);
-        end = clock();
- 
-        /* Print Report */
-        printf("\tTime estimation in CPU : %f s.\n\n",(end-start)/(float)CLOCKS_PER_SEC);
-    }
+       }
 
-    printf("\tCheck nvprof for more time estimation.\n");
+    printf("\tCheck nvprof for more time estimation.\n\n");
     	
     /* Clean host and device var*/
 	free(h_pi); 
