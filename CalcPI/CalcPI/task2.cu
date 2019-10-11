@@ -1,98 +1,78 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <cuda.h>
-#include <cuda_runtime.h>
-#define PI 3.14159265358979323846264
-__global__ void calcPi(int *iter, double *result){
-	double m, ni, diff, mypi = 0.0; 
-	m = 1.0/(double)*iter;
+/*
+Tested blocks/threads: 
+256/256
+256/1024
+128/1024
+512/1024
+768/1024
+*/
+#define NUM_BLOCK  768  
+#define NUM_THREAD  1024  
+#define PI  3.14159265358979323846  
 
-	for(int i = 0; i < *iter; i++){
-		ni =((double)i + 0.5) * m;
-		mypi += 4.0 / (1.0 + ni * ni);
+/* Kernel function */
+__global__ void cal_pi(double *mypi, int iter, 
+    double m, int nthreads, int nblocks) {
+	int i;
+	double ni;
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;  
+    // Sequential thread index across the blocks
+	for (i = idx; i< iter; i += nthreads * nblocks) {
+		ni = (i + 0.5) * m;
+		mypi[idx] += 4.0/(1.0 + ni * ni);
 	}
-
-	mypi *= m;
-	diff = mypi - PI;
-	*result = diff;
 }
 
 
-int main (void) {
-	printf("START\n");
-	int arrLength = 3;
-	int iteArr[3] = { 24000000, 48000000, 94000000 };
-	double myResults[3];
+int main(void) {
+    double pi = 0;
 
-	int *d_ite, ite;
-	double *d_result, h_result;
-	int sizeInt = sizeof(int);
-	double sizeDou = sizeof(double);
-	
+    int iteArr[3] = { 24000000, 48000000, 94000000 };
+    //double iteArr[3] = { 24000000000, 48000000000, 94000000000 };
+    //int iteArr[3] = { 1, 2, 4 };
 
-/*
- * Allocate space for device copies. 
- * @params (void**) pointer, size
- */
-	cudaMalloc((void**) &d_ite, sizeInt);
-	cudaMalloc((void**) &d_result, sizeDou);
+    /* Setting upt grid and block dimesions */
+    dim3 dimGrid(NUM_BLOCK,1,1);  
+    dim3 dimBlock(NUM_THREAD,1,1); 
+    printf("REPORT # of blocks = %d, # of threads/block = %d\n", NUM_BLOCK, NUM_THREAD);
 
-	float time;
-	cudaEvent_t start, stop;
-	
-for(int j = 0; j < arrLength; j++){
-	cudaEventCreate(&start);
-	cudaEventCreate(&stop);
-	cudaEventRecord(start, 0);
+    /* Host and Device variables (arrays) */
+    double *h_pi, *d_pi;  
+    for (int i = 0; i < 3; i++){
+        int currentIter = iteArr[i];
 
-	printf("Running %d j: %d\n", iteArr[j], j);
-	ite = iteArr[j];
-/*
-* Copy input
-* @params (pointer dst, pointer src, size, type)
-*/
-	cudaMemcpy(d_ite, &ite, sizeInt, cudaMemcpyHostToDevice);
-	//cudaMemcpy(d_result, &result, sizeDou , cudaMemcpyHostToDevice);
-/*
-* Launch Kernel
-*/
-	calcPi<<<1,1>>>(d_ite, d_result);
-/*
-* Copy result back to host
-* @params (pointer dst, pointer src, size, type)
-*/
-	cudaMemcpy(&h_result, d_result, sizeDou, cudaMemcpyDeviceToHost);
-	//printf("result %.70f\n", h_result);
-
-    myResults[j] = h_result;
+        double step = 1.0 / currentIter;  
+        size_t size = NUM_BLOCK*NUM_THREAD*sizeof(double);  
+        
+        /* Allocate on host*/
+        h_pi = (double *)malloc(size);  
     
-	//printf("mypi %f\n", mypi[j]);
-		
-	/*
-	* Clean up
-	*/	
-	cudaFree(d_ite); cudaFree(d_result);
-	cudaEventRecord(stop, 0);
-	cudaEventSynchronize(stop);
-	cudaEventElapsedTime(&time, start, stop);
-	time /= 1000;
-	printf("Time to generate:  %f s \n", time);
+        /*Allocate on device*/
+        cudaMalloc((void **) &d_pi, size);  
+        /* Set d_pi to zero */
+        cudaMemset(d_pi, 0, size);
+        /* Run Kernel */
+        cal_pi <<<dimGrid, dimBlock>>> (d_pi, currentIter, 
+            step, NUM_THREAD, NUM_BLOCK); 
+    
+        /* Copy results from device to the host*/
+        cudaMemcpy(h_pi, d_pi, size, cudaMemcpyDeviceToHost);
+        
+        /* Finish pi in host */
+        for( int j = 0; j < NUM_THREAD*NUM_BLOCK; j++)
+            pi += h_pi[j];
+        pi *= step;
+        printf("\tMyPI = %20.18f \n",pi);
+        printf("\tMyPI - PI = %20.18f \n",pi-PI);
+       }
 
+    printf("\tCheck nvprof for more time estimation.\n\n");
+    	
+    /* Clean host and device var*/
+	free(h_pi); 
+	cudaFree(d_pi);
 
-
-
-}//for loop
-
-for(int k = 0; k < 3; k++){
-
-	printf("RESULT %d =  %.70f\n", k, myResults[k]);
+	return 0;
 }
-printf("PASSED\n");
-
-return 0;
-
-
-}
-/*
-* Notes: cuda uses pointers. 
-*/
