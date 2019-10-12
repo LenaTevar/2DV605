@@ -6,6 +6,7 @@
 ## OpenMP
 ``` 
 gcc task1.c -fopenmp
+./a.out
 ```
 
 ## CUDA
