@@ -11,5 +11,5 @@ gcc task1.c -fopenmp
 ## CUDA
 ```
 nvcc task2.cu
-nvprofile ./a.out
+nvprof ./a.out
 ```
